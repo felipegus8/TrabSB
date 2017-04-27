@@ -92,5 +92,5 @@ int utf16_8(FILE *arq_entrada, FILE *arq_saida) {
         //Continuar lendo o arquivo.
         startFile = fgetc(arq_entrada);
     }
-    return 1;
+    return 0;
 }
