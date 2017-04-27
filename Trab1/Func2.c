@@ -1,17 +1,25 @@
 
+//
+//  main.c
+//  SBTeste
+//
+//  Created by Felipe Viberti on 22/03/17.
+//  Copyright © 2017 Felipe Viberti. All rights reserved.
+//
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 int utf16_8(FILE *arq_entrada, FILE *arq_saida);
 void utf8 (unsigned int ch,char **string,FILE *arqSaida);
 
-static char buffer[1024];
-
 int main (void) {
-    FILE *f1,*f2;
+    FILE *f1,*f2,*f3,*f4;
     int result;
     f1 = fopen("/Users/felipeviberti/Desktop/SBTeste/SBTeste/utf16_peq_big.txt", "rb");
     f2 = fopen("/Users/felipeviberti/Desktop/SBTeste/SBTeste/conversao.txt","wb");
+    f3 = fopen("/Users/felipeviberti/Desktop/SBTeste/SBTeste/utf16_big.txt", "rb");
+    f4 = fopen("/Users/felipeviberti/Desktop/SBTeste/SBTeste/conversaoGrande.txt","wb");
     result = utf16_8(f1, f2);
     return 0;
 }
@@ -62,7 +70,8 @@ void utf8 (unsigned int ch,char **string,FILE *arqSaida) {
 
 
 int utf16_8(FILE *arq_entrada, FILE *arq_saida) {
-    char *p = buffer;
+    static char buffer[4];
+    char *pointerToBuffer;
     int result;
     int n = fseek(arq_entrada, 0, SEEK_END);
     if (n!=0) {
@@ -70,7 +79,7 @@ int utf16_8(FILE *arq_entrada, FILE *arq_saida) {
         return -1;
     }
     rewind(arq_entrada);
-    
+    pointerToBuffer = buffer;
     int first = fgetc(arq_entrada);
     int second = fgetc(arq_entrada);
     printf("Primeiro valor do BOM:%x\nSegundo valor do BOM:%x\n",first,second);
@@ -89,7 +98,6 @@ int utf16_8(FILE *arq_entrada, FILE *arq_saida) {
         //Total junta o primeiro byte com o segundo para formar o valor certo em hexa.
         int total = ((startFile << 8) | secondPart) & 0xffff;
         
-        printf("Total = %x\n",(unsigned)total);
         //Agora tem que ver os dois casos possíveis
         
         // 1 - Valores entre U+10000 a U+10FFFF
@@ -102,14 +110,15 @@ int utf16_8(FILE *arq_entrada, FILE *arq_saida) {
         }
         
         //Segundo code unit
+        
         else if ((total >= 0xdc00) && (total <= 0xdfff)) {
-            result |= total - 0xdc00;
-            utf8(result + 0x10000, &p,arq_saida);
+            result = result | total - 0xdc00;
+            utf8(result + 0x10000, &pointerToBuffer,arq_saida);
             printf("Result2:%d\n",result);
         }
         //Valores entre U+0000 a U+FFFF
         else {
-            utf8(total, &p, arq_saida);
+            utf8(total, &pointerToBuffer, arq_saida);
             printf("Result3:%d\n",result);
         }
         
@@ -117,8 +126,6 @@ int utf16_8(FILE *arq_entrada, FILE *arq_saida) {
         startFile = fgetc(arq_entrada);
     }
     
-    *p = 0;
+    *pointerToBuffer = 0;
     return 1;
 }
-
-
