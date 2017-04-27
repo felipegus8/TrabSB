@@ -1,4 +1,3 @@
-
 //
 //  main.c
 //  SBTeste
@@ -20,81 +19,32 @@ int main (void) {
     f2 = fopen("/Users/felipeviberti/Desktop/SBTeste/SBTeste/conversao.txt","wb");
     f3 = fopen("/Users/felipeviberti/Desktop/SBTeste/SBTeste/utf16_big.txt", "rb");
     f4 = fopen("/Users/felipeviberti/Desktop/SBTeste/SBTeste/conversaoGrande.txt","wb");
-    result = utf16_8(f1, f2);
+    result = utf16_8(f3, f4);
     return 0;
-}
-
-void utf8 (unsigned int ch,char **string,FILE *arqSaida) {
-    char *src;
-    
-    if (*string == NULL) {
-        return;
-    }
-    
-    src = *string;
-    
-    //Códigos de U+0000 a U+007F
-    if (ch <= 0x7f) {
-        src[0] = ch;
-        *string	+= 1;
-        printf("StringResult1:%s\n",src);
-    }
-    //Códigos entre U+0080 a U+07FF
-    else if (ch <= 0x0007ff) {
-        src[0] = 0xc0 | ((ch >>  6) & 0x1f);
-        src[1] = 0x80 | (ch & 0x3f);
-        *string	+= 2;
-        printf("StringResult2:%s\n",src);
-    }
-    //Códigos entre U+0800 a U+FFFF
-    else if (ch <= 0x00ffff) {
-        src[0] = 0xe0 | ((ch >> 12) & 0x0f);
-        src[1] = 0x80 | ((ch >>  6) & 0x3f);
-        src[2] = 0x80 | (ch & 0x3f);
-        *string	+= 3;
-        printf("StringResult3:%s\n",src);
-    }
-    //Códigos entre U+10000 a U+10FFFF
-    else if (ch <= 0x10ffff) {
-        src[0] = 0xf0 | ((ch >> 18) & 0x07);
-        src[1] = 0x80 | ((ch >> 12) & 0x3f);
-        src[2] = 0x80 | ((ch >>  6) & 0x3f);
-        src[3] = 0x80 | (ch & 0x3f);
-        *string	+= 4;
-        printf("StringResult4:%s\n",src);
-    }
-    //Escrever no arquivo o resultado obtido
-    fwrite(src, 1, sizeof(src), arqSaida);
-    
 }
 
 
 int utf16_8(FILE *arq_entrada, FILE *arq_saida) {
-    static char buffer[4];
-    char *pointerToBuffer;
-    int result;
-    int n = fseek(arq_entrada, 0, SEEK_END);
-    if (n!=0) {
-        fprintf(stderr, "Erro no tamanho dp arquivo");
-        return -1;
-    }
-    rewind(arq_entrada);
-    pointerToBuffer = buffer;
+    char *src;
+    int result,result2;
+    
+    //Primeiro pego os dois valores iniciais do arquivo para ver o BOM.
     int first = fgetc(arq_entrada);
     int second = fgetc(arq_entrada);
-    printf("Primeiro valor do BOM:%x\nSegundo valor do BOM:%x\n",first,second);
+    
     //Verificar se tem o BOM certo no arquivo.O BOM pode estar tanto em Big Endian como em Little Endian.Por isso precisa checar os dois.
+    
     if ((first != 0xfe || second != 0xff) && (first != 0xff || second != 0xfe)) {
         fprintf(stderr, "%s", "BOM incorreto!\n");
         return -1;
     }
     
+    //Começa a ler o arquivo a partir daí
     int startFile = fgetc(arq_entrada);
     
     //Esse while lê o arquivo até o final
-    while (startFile != 0xffffffff) {
+    while (startFile != EOF) {
         int secondPart = fgetc(arq_entrada);
-        
         //Total junta o primeiro byte com o segundo para formar o valor certo em hexa.
         int total = ((startFile << 8) | secondPart) & 0xffff;
         
@@ -102,30 +52,62 @@ int utf16_8(FILE *arq_entrada, FILE *arq_saida) {
         
         // 1 - Valores entre U+10000 a U+10FFFF
         
-        //Primeiro code unit
+        //Se estiver nesse range existem dois code units e o primeiro deles vai estar entre 0xd800 e 0xdbff.
         if ((total >= 0xd800) && (total <= 0xdbff)) {
+            
+            //Pego só a parte que importa desse code unit
             result = (total - 0xd800) << 10;
-            printf("Result1:%d\n",result);
-            fwrite(&result, 1, 1, arq_saida);
+            
+            //Agora tem que ler os dois próximos para formar o segundo code unit
+            int thirdPart = fgetc(arq_entrada);
+            int fourthPart = fgetc(arq_entrada);
+            
+            //Da mesma forma que o total,aqui eu formo o segundo code unit.
+            int secondCodeUnit = ((thirdPart << 8) | fourthPart) & 0xffff;
+            
+            //Agora tem que converter esse code units para o seu valor Unicode
+            result2 = result | secondCodeUnit - 0xdc00;
+            int unicode = result2 + 0x10000;
+            
+            //Agora converte para UTF8.Como esse código Unicode tem que estar entre U+10000 a U+10FFFF faço a conversão considerando 4 bytes.
+            src = (char*) malloc((sizeof(char)*4) + 1);
+            src[0] = 0xF0 + ((unicode & 0x1C0000)>>18);
+            src[1] = 0x80 + ((unicode & 0x3F000)>>12);
+            src[2] = 0x80 + ((unicode & 0xFC0)>>6);
+            src[3] = 0x80 + (unicode & 0x3F);
         }
         
-        //Segundo code unit
-        
-        else if ((total >= 0xdc00) && (total <= 0xdfff)) {
-            result = result | total - 0xdc00;
-            utf8(result + 0x10000, &pointerToBuffer,arq_saida);
-            printf("Result2:%d\n",result);
-        }
-        //Valores entre U+0000 a U+FFFF
+        //Agora tem que pegar todos os outros valores,ou seja os que estão entre U+0000 e U+FFFF e tratar cada caso especificamente.
         else {
-            utf8(total, &pointerToBuffer, arq_saida);
-            printf("Result3:%d\n",result);
+            //Valores entre U+0000 a U+FFFF.São representados só com um byte
+            if (total <= 0x7f) {
+                src = (char*) malloc(sizeof(char) + 1);
+                src[0] = total;
+            }
+            
+            //Códigos entre U+0080 a U+07FF.São representados com dois bytes.
+            else if (total <= 0x0007ff) {
+                src = (char*) malloc((sizeof(char)*2) + 1);
+                src[0] = 0xc0 | ((total >>  6) & 0x1f);
+                src[1] = 0x80 | (total & 0x3f);
+            }
+            
+            //Códigos entre U+0800 a U+FFFF.São representados com três bytes.
+            else if (total <= 0x00ffff) {
+                src = (char*) malloc((sizeof(char)*3) + 1);
+                src[0] = 0xe0 | ((total >> 12) & 0x0f);
+                src[1] = 0x80 | ((total >>  6) & 0x3f);
+                src[2] = 0x80 | (total & 0x3f);
+            }
+        }
+        //Agora faço um for na string src para imprimir cada elemento dela no arquivo de saída.
+        int i = 0;
+        for (i=0;src[i] != '\0';i++) {
+            fputc(src[i], arq_saida);
         }
         
-        //Ver o próximo byte
+        //Continuar lendo o arquivo.
         startFile = fgetc(arq_entrada);
     }
-    
-    *pointerToBuffer = 0;
     return 1;
 }
