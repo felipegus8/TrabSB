@@ -127,7 +127,6 @@ int utf8_16(FILE *arq_entrada, FILE *arq_saida) {
         }else if(((v[0]&0x8)>> 3)==0){
             //PARA 4 BYTES
             n = fread ((v+1), 1, 1, arq_entrada);
-            // dump(&v[1],1);
             
             if(n!=1){
                 fprintf(stderr,"Erro de Leitura 5!\n");
@@ -135,7 +134,6 @@ int utf8_16(FILE *arq_entrada, FILE *arq_saida) {
             }
             
             n = fread ((v+2), 1, 1, arq_entrada);
-            // dump(&v[2],1);
             
             if(n!=1){
                 fprintf(stderr,"Erro de Leitura 6!\n");
@@ -143,7 +141,6 @@ int utf8_16(FILE *arq_entrada, FILE *arq_saida) {
             }
             
             n = fread ((v+3), 1, 1, arq_entrada);
-            // dump(&v[3],1);
             
             if(n!=1){
                 fprintf(stderr,"Erro de Leitura 7!\n");
@@ -169,15 +166,16 @@ int utf8_16(FILE *arq_entrada, FILE *arq_saida) {
             
             binario = v[3] & masc;
             binario = temp + binario;
+            printf("Com 4:U+%x\n",binario);
             
             //converte unit para utf16
             
             
             tmp = binario - 0x10000;
             tmp_unit_1 = (tmp & 0xFFC00) >> 10;
-            tmp_unit_1 = unit_1 + 0xD800;
+            tmp_unit_1 = tmp_unit_1 + 0xD800;
             tmp_unit_2 = tmp & 0x3FF;
-            tmp_unit_2 = unit_2 + 0xDC00;
+            tmp_unit_2 = tmp_unit_2 + 0xDC00;
             
             unit_1 = tmp_unit_1;
             printf("Conversão 4 bytes:Code Unit 1:%x\n",unit_1);
@@ -192,12 +190,6 @@ int utf8_16(FILE *arq_entrada, FILE *arq_saida) {
         }
         
         printf("U+%x\n",unit_1);
-        
-        if(((v[0]&0x10)>>4)==0){
-            tmp = (unit_2& 0xFF) << 8;
-            unit_2= (unit_2& 0xFF00) >> 8;
-            unit_2= unit_2+ tmp;
-        }
         printf("%x",unit_1);
         fputc(0x00, arq_saida);
         fputc(unit_1, arq_saida);
@@ -208,7 +200,7 @@ int utf8_16(FILE *arq_entrada, FILE *arq_saida) {
         }
         if(unit_2 != 0x0){
             
-            n = fwrite (&unit_2, 2, 1, arq_saida);
+            fputc(unit_2, arq_saida);
             
             if(n!=1){
                 fprintf(stderr,"Erro de Gravacao!\n");
