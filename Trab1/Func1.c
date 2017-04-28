@@ -42,7 +42,7 @@ int utf8_16(FILE *arq_entrada, FILE *arq_saida) {
         
         unsigned int masc, temp, binario;
         
-        unsigned short unit_1, unit_2,tmp_unit_1,tmp_unit_2;
+        unsigned int unit_1, unit_2,tmp_unit_1,tmp_unit_2;
         unsigned int tmp;
         ;
         
@@ -190,17 +190,33 @@ int utf8_16(FILE *arq_entrada, FILE *arq_saida) {
         }
         
         printf("U+%x\n",unit_1);
-        printf("%x",unit_1);
-        fputc(0x00, arq_saida);
-        fputc(unit_1, arq_saida);
-        // n = fwrite (&unit_1, 2, 1, arq_saida);
+        //Se o valor de unit1 for menor que 00FF tem que colocar um 00 no arquivo antes de colocar o unit1.
+        if (unit_1 <= 0X00FF) {
+            fputc(0x00, arq_saida);
+            fputc(unit_1, arq_saida);
+        }
+        //Se não for tem que separar o código em hex e printar cada um individualmente.
+        else {
+            int tot1 = unit_1 >> 8;
+            printf("Tot1:%x\n",tot1);
+            fputc(tot1, arq_saida);
+            int tot2 = unit_1  & 0x0ff;
+            printf("Tot2:%x\n",tot2);
+            fputc(tot2, arq_saida);
+        }
+        
         if(n!=1){
             fprintf(stderr,"Erro de Gravacao!\n");
             return -1;
         }
         if(unit_2 != 0x0){
-            
-            fputc(unit_2, arq_saida);
+            //Mesma lógica de printar cada um individualmente.
+            int tot1 = unit_2 >> 8;
+            printf("Tot1:%x\n",tot1);
+            fputc(tot1, arq_saida);
+            int tot2 = unit_2  & 0x0ff;
+            printf("Tot2:%x\n",tot2);
+            fputc(tot2, arq_saida);
             
             if(n!=1){
                 fprintf(stderr,"Erro de Gravacao!\n");
