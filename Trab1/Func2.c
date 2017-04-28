@@ -66,7 +66,7 @@ int utf16_8(FILE *arq_entrada, FILE *arq_saida) {
             int secondCodeUnit = ((thirdPart << 8) | fourthPart) & 0xffff;
             
             //Agora tem que converter esse code units para o seu valor Unicode
-            result2 = result | secondCodeUnit - 0xdc00;
+            result2 = result | (secondCodeUnit - 0xdc00);
             int unicode = result2 + 0x10000;
             
             //Agora converte para UTF8.Como esse código Unicode tem que estar entre U+10000 a U+10FFFF faço a conversão considerando 4 bytes.
