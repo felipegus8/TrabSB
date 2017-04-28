@@ -1,11 +1,36 @@
-Felipe Gustavo Pereira Viberti 1510384 Turma 3 WB 
-Matheus Matricula Turma 3 WB 
+Felipe Gustavo Pereira Viberti 1510384 Turma 3 WB
+Matheus Rodrigues de Oliveira Leal 1511316 Turma 3 WB
+
+O programa foi testado e retestado manualmente, olhando a resposta, e tambem
+usando o utilitário hexdump. Não foram encontrados erros que possam prejudicar
+o funcionamento do programa. Usamos editores de texto para escrever o código e
+testamos eles por meio do terminal usando o gcc.
 
 
+ Na conversão UTF8 para UTF16:
+
+  A função de conversão de UTF-16 para UTF-8 funcionou corretamente.
+Realizamos testes com os dois arquivos dados , o pequeno e o grande, e
+ambos foram convertidos corretamente. Tivemos algumas irregulariedades
+durante o processo de teste. Eu estava fazendo "copy and paste" do browser
+para ter os arquivos de UTF-8 do site, após o email mandado pela
+professora eu entendi que não necessariamente o browser e o editor sabem
+ler/interpretar corretamente codificação UTF. Após fazer o download dos
+aquivos e ao invez de abrir eles no browser, usei a hexadump para comparar
+os arquivos foi possivel perceber que ele estava funcionando. Na hora de
+converter de unicode para UTF-16 todos os casos estavam fazendo da forma
+errada, com a ajuda da minha dupla conseguimos achar o erro e fazer ela da
+maneira correta.
 
 
+ Na conversão UTF16 para UTF8:
 
-
-
-
-A função de conversão de UTF-16 para UTF-8 funcionou corretamente.Realizamos testes com os dois arquivos dados(o pequeno e o grande) e os dois foram convertidos corretamente.Durante o processo de testes algumas coisas curiosas aconteceram.Eu fiz essa função no Mac e rodei nele e tudo funcionou como esperado.Quando fui rodar no Linux deu SegFault. Fiquei bastante tempo tentando descobrir porque e descobri que o erro na abertura do arquivo na main(fopen).O arquivo no Mac já tinha extensão txt e o do Linux não.O segFault acontecia por causa dessa extensão txt.Depois que percebi isso foi um grande alívio, porque percebi que a função em si estava correta.
+  A função de conversão de UTF-16 para UTF-8 funcionou corretamente.
+Realizamos testes com os dois arquivos dados (o pequeno e o grande) e os
+dois foram convertidos corretamente. Durante o processo de testes algumas
+coisas curiosas aconteceram. Eu fiz essa função no Mac e rodei nele e tudo
+funcionou como esperado. Quando fui rodar no Linux deu SegFault. Fiquei
+bastante tempo tentando descobrir porque e descobri que o erro na abertura do
+arquivo na main(fopen). O arquivo no Mac já tinha extensão txt e o do Linux não.
+O segFault acontecia por causa dessa extensão txt. Depois que percebi isso foi
+um grande alívio, porque percebi que a função em si estava correta.
