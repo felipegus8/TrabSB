@@ -9,7 +9,7 @@
 struct memory {
   int nextFree; // próximo índice que está livre
   unsigned char *code; //código de máquina
-}
+};
 typedef struct memory Memory;
 
 static void error (const char *msg, int line) {
@@ -17,28 +17,76 @@ static void error (const char *msg, int line) {
   exit(EXIT_FAILURE);
 }
 
-void retorno(FILE *myfp, int *line, char *text){
+void retorno(FILE *myfp, int line, int c,Memory *block){
   char c0;
   if (fscanf(myfp, "et%c", &c0) != 1){
     error("comando invalido", line);
   }else{
     printf("ret\n");
-    memcpy(&text[*line],{0x8B,0x45,0x00},sizeof({0x8B,0x45,0x00})); // mov -X(%ebp),%eax ou x(%ebp)
-    *line+=sizeof({0x8B,0x45,0x00});
-    memcpy(&text[*line],{0xC9,0xC3},sizeof({0xC9,0xC3})); // leave ret
-    *line+=sizeof({0xC9,0xC3});
+    // mov -X(%ebp),%eax ou x(%ebp)
+    block->code[block->nextFree] = 0x8B;
+    block->nextFree ++;
+    block->code[block->nextFree] = 0x45;
+    block->nextFree ++;
+    block->code[block->nextFree] = 0x00;
+    block->nextFree ++;
+    // leave ret
+    block->code[block->nextFree] = 0xC9;
+    block->nextFree ++;
+    block->code[block->nextFree] = 0xC3;
+    block->nextFree ++;
   }
 }
 
-void atribuicao(FILE *myfp, int line, char *text, int c){
+void atribuicao(FILE *myfp, int line, int c,Memory *block){
   int idx0, idx1, idx2;
   char var0 = c, var1, var2, op;
   if (fscanf(myfp, "%d = %c%d %c %c%d", &idx0, &var1, &idx1,&op, &var2, &idx2) != 6){
     error("comando invalido", line);
   }else{
     printf("%c%d = %c%d %c %c%d\n",var0, idx0, var1, idx1, op, var2, idx2);
+    switch var1: {
+      case 'p':
+      if (idx1 == 1) { //Parâmetro está no %edi
+        //movl %edi,%r12d
+        block->code[block->nextFree] = 0x41;
+        block->nextFree ++;
+        block->code[block->nextFree] = 0x89;
+        block->nextFree ++;
+        block->code[block->nextFree] = 0xFC;
+        block->nextFree ++;
+      }
+      else { //Parâmetro está no %esi
+        //movl %esi,%r12d
+        block->code[block->nextFree] = 0x41;
+        block->nextFree ++;
+        block->code[block->nextFree] = 0x89;
+        block->nextFree ++;
+        block->code[block->nextFree] = 0xF4;
+        block->nextFree ++;
+      }
+      case 'v':
+
+      case '$':
+      //movl $const,%r12d
+      //41 BC (Próximos 4 bytes correpondem ao número em si em hexa.Por isso faço os shifts)
+      block->code[block->nextFree] = 0x41;
+      block->nextFree ++;
+      block->code[block->nextFree] = 0xBC;
+      block->nextFree ++;
+      block->code[block->nextFree] = (char) idx1;
+      block->nextFree ++;
+      block->code[block->nextFree] = (char) idx1 >> 8;
+      block->nextFree ++;
+      block->code[block->nextFree] = (char) idx1 >> 16;
+      block->nextFree ++;
+      block->code[block->nextFree] = (char) idx1 >> 24;
+      block->nextFree ++;
+
+    }
   }
 }
+
 
 void desvia(FILE *myfp, int line, char *text){
   char var0;
@@ -51,43 +99,56 @@ void desvia(FILE *myfp, int line, char *text){
 }
 typedef int (*funcp) ();
 
-void init_func () {
+void init_func (Memory *block) {
   unsigned char init[8];
   //0:	55                   	push   %rbp
   init[0] = 0x55
 
+
   //1:	48 89 e5             	mov    %rsp,%rbp
-  init[1] = 0x48
-  init[2] = 0x89
-  init[3] = 0xE5
+  init[1] = 0x48;
+  init[2] = 0x89;
+  init[3] = 0xE5;
 
   //4:	48 83 ec 20          	sub    $0x20,%rsp
-  init[4] = 0x48
-  init[5] = 0x83
-  init[6] = 0xEC
-  init[7] = 0x20
+  init[4] = 0x48;
+  init[5] = 0x83;
+  init[6] = 0xEC;
+  init[7] = 0x20;
+
+  for (i=0;i<8;i++) {
+    block->code[block->nextFree] = init[i];
+    nextFree ++;
+  }
 }
 
+Memory *init_memory() {
+  Memory *init;
+  init = (Memory*)malloc (sizeof(Memory));
+  init->nextFree = 0;
+  init->code = (unsigned char*) malloc (sizeof(unsigned char*)*50*4);
+  if (init->code == NULL) {
+    printf ("ERROR!\n");
+    exit (1);
+  }
+  return init;
+}
 funcp compila (FILE *myfp){
   char *tmp_texto;
   char code[100];
   int line = 8;
   int  c;
-
-  tmp_texto = (char*) malloc (sizeof(char*)*50*4);
-  if (tmp_texto == NULL) {
-   printf ("ERROR!\n");
-   exit (1);
- }
+  Memory *block = init_memory();
+  init_func(block);
   while ((c = fgetc(myfp)) != EOF) {
     switch (c) {
       case 'r': { /* retorno */
-        retorno(myfp,&line,code);
+        retorno(myfp,line,c,block);
         break;
       }
       case 'v':
       case 'p': {  /* atribuicao */
-        atribuicao(myfp,line,code,c);
+        atribuicao(myfp,line,c,block);
         break;
       }
       case 'i': { /* desvio */
