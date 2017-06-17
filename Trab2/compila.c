@@ -17,14 +17,16 @@ static void error (const char *msg, int line) {
   exit(EXIT_FAILURE);
 }
 
-void retorno(FILE *myfp, int line, char *text){
+void retorno(FILE *myfp, int *line, char *text){
   char c0;
   if (fscanf(myfp, "et%c", &c0) != 1){
     error("comando invalido", line);
   }else{
     printf("ret\n");
-    text = strcat(text,"leave");
-    text = strcat(text,"ret");
+    memcpy(&text[*line],{0x8B,0x45,0x00},sizeof({0x8B,0x45,0x00})); // mov -X(%ebp),%eax ou x(%ebp)
+    *line+=sizeof({0x8B,0x45,0x00});
+    memcpy(&text[*line],{0xC9,0xC3},sizeof({0xC9,0xC3})); // leave ret
+    *line+=sizeof({0xC9,0xC3});
   }
 }
 
@@ -53,7 +55,7 @@ void init_func () {
   unsigned char init[8];
   //0:	55                   	push   %rbp
   init[0] = 0x55
-  
+
   //1:	48 89 e5             	mov    %rsp,%rbp
   init[1] = 0x48
   init[2] = 0x89
@@ -69,7 +71,7 @@ void init_func () {
 funcp compila (FILE *myfp){
   char *tmp_texto;
   char code[100];
-  int line = 1;
+  int line = 8;
   int  c;
 
   tmp_texto = (char*) malloc (sizeof(char*)*50*4);
@@ -80,7 +82,7 @@ funcp compila (FILE *myfp){
   while ((c = fgetc(myfp)) != EOF) {
     switch (c) {
       case 'r': { /* retorno */
-        retorno(myfp,line,code);
+        retorno(myfp,&line,code);
         break;
       }
       case 'v':
