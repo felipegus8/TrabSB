@@ -35,7 +35,7 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block){
     error("comando invalido", line);
   }else{
     printf("%c%d = %c%d %c %c%d\n",var0, idx0, var1, idx1, op, var2, idx2);
-    switch var1: {
+    switch (var1) {
       case 'p':
       if (idx1 == 1) { //Parâmetro está no %edi
       //movl %edi,%r12d
@@ -74,6 +74,45 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block){
       block->nextFree ++;
 
     }
+
+    switch (var2) {
+    case 'p':
+    if (idx1 == 1) { //Parâmetro está no %edi
+    //movl %edi,%r13d
+    block->code[block->nextFree] = 0x41;
+    block->nextFree ++;
+    block->code[block->nextFree] = 0x89;
+    block->nextFree ++;
+    block->code[block->nextFree] = 0xFD;
+    block->nextFree ++;
+    }
+    else { //Parâmetro está no %esi
+     //movl %esi,%r13d
+     block->code[block->nextFree] = 0x41;
+     block->nextFree ++;
+     block->code[block->nextFree] = 0x89;
+     block->nextFree ++;
+     block->code[block->nextFree] = 0xF5;
+     block->nextFree ++;
+    }
+    case 'v':
+
+    case '$':
+    //movl $const,%r13d
+    //41 BC (Próximos 4 bytes correpondem ao número em si em hexa.Por isso faço os shifts)
+    block->code[block->nextFree] = 0x41;
+    block->nextFree ++;
+    block->code[block->nextFree] = 0xBD;
+    block->nextFree ++;
+    block->code[block->nextFree] = (char) idx1;
+    block->nextFree ++;
+    block->code[block->nextFree] = (char) idx1 >> 8;
+    block->nextFree ++;
+    block->code[block->nextFree] = (char) idx1 >> 16;
+    block->nextFree ++;
+    block->code[block->nextFree] = (char) idx1 >> 24;
+    block->nextFree ++;
+  }
   }
 }
 
@@ -91,6 +130,7 @@ typedef int (*funcp) ();
 
 void init_func (Memory *block) {
   unsigned char init[8];
+  int i;
   //0:	55                   	push   %rbp
   init[0] = 0x55;
 
@@ -107,7 +147,7 @@ void init_func (Memory *block) {
 
   for (i=0;i<8;i++) {
     block->code[block->nextFree] = init[i];
-    nextFree ++;
+    block->nextFree ++;
   }
 }
 
