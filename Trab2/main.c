@@ -11,6 +11,8 @@ int main(void){
     perror ("nao conseguiu abrir arquivo!");
     exit(1);
   }
+  compila(myfp);
+
 
   return 0;
 }
