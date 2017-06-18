@@ -47,24 +47,18 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block){
     printf("%c%d = %c%d %c %c%d\n",var0, idx0, var1, idx1, op, var2, idx2);
     switch (var1) {
       case 'p':
-      if (idx1 == 1) { //Parâmetro está no %edi
+      block->code[block->nextFree] = 0x41;
+      block->nextFree ++;
+      block->code[block->nextFree] = 0x89;
+      block->nextFree ++;
+      if (idx1 == 1) //Parâmetro está no %edi
         //movl %edi,%r12d
-        block->code[block->nextFree] = 0x41;
-        block->nextFree ++;
-        block->code[block->nextFree] = 0x89;
-        block->nextFree ++;
         block->code[block->nextFree] = 0xFC;
-        block->nextFree ++;
-      }
-      else { //Parâmetro está no %esi
+      else  //Parâmetro está no %esi
         //movl %esi,%r12d
-        block->code[block->nextFree] = 0x41;
-        block->nextFree ++;
-        block->code[block->nextFree] = 0x89;
-        block->nextFree ++;
         block->code[block->nextFree] = 0xF4;
+
         block->nextFree ++;
-      }
       case 'v':
       //No caso de uma variável local,ela tem que estar na pilha.Só tem que descobrir em que posição.
       //Os três primeiros códigos são iguais.
@@ -102,24 +96,18 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block){
 
     switch (var2) {
     case 'p':
-    if (idx1 == 1) { //Parâmetro está no %edi
-    //movl %edi,%r13d
     block->code[block->nextFree] = 0x41;
     block->nextFree ++;
     block->code[block->nextFree] = 0x89;
     block->nextFree ++;
+    if (idx1 == 1)  //Parâmetro está no %edi
+    //movl %edi,%r13d
     block->code[block->nextFree] = 0xFD;
-    block->nextFree ++;
-    }
-    else { //Parâmetro está no %esi
+    else  //Parâmetro está no %esi
      //movl %esi,%r13d
-     block->code[block->nextFree] = 0x41;
-     block->nextFree ++;
-     block->code[block->nextFree] = 0x89;
-     block->nextFree ++;
      block->code[block->nextFree] = 0xF5;
+
      block->nextFree ++;
-    }
     case 'v':
     //Mesmo caso do primeiro switch.Só muda aqui é que está movendo para %r13d.
     block->code[block->nextFree] = 0x44;
@@ -184,10 +172,11 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block){
   }
   }
 
+  switch (var0) {
+  case 'v':
   //Agora tem que colocar o que está em %r12d no lugar certo na pilha.
   //Só o que muda no código de máquina de uma posição da pilha para outra são os dois últimos dígitos que variam de acordo com o lugar onde a variavel está sendo colocada.
   //O início sempre é 44 89 65
-
   block->code[block->nextFree] = 0x44;
   block->nextFree ++;
   block->code[block->nextFree] = 0x89;
@@ -200,6 +189,18 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block){
   block->code[block->nextFree] = local_pilha;
   block->nextFree ++;
 
+  case 'p':
+  block->code[block->nextFree] = 0x44;
+  block->nextFree ++;
+  block->code[block->nextFree] = 0x89;
+  block->nextFree ++;
+  if (idx0 == 1) //mover para %edi
+    block->code[block->nextFree] = 0xE7;
+  else   //mover para %esi
+    block->code[block->nextFree] = 0xE6;
+
+  block->nextFree ++;
+  }
 }
 
 
@@ -317,7 +318,7 @@ Memory *init_memory() {
   Memory *init;
   init = (Memory*)malloc (sizeof(Memory));
   init->nextFree = 0;
-  init->code = (unsigned char*) malloc (sizeof(unsigned char*)*50*4);
+  init->code = (unsigned char*) malloc (sizeof(unsigned char*)*1600);
   if (init->code == NULL) {
     printf ("ERROR!\n");
     exit (1);
@@ -325,7 +326,6 @@ Memory *init_memory() {
   return init;
 }
 funcp compila (FILE *myfp){
-  char *tmp_texto;
   char code[100];
   int line = 8;
   int  c;
@@ -351,8 +351,7 @@ funcp compila (FILE *myfp){
     line ++;
     fscanf(myfp, " ");
   }
+  printf("\nChegou fim\n");
 
-  tmp_texto=strcpy(tmp_texto,code);
-
-  return (funcp)tmp_texto;
+  return (funcp)block->code;
 }
