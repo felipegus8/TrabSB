@@ -25,11 +25,12 @@ void retorno(FILE *myfp, int line, int c, Memory *block, int *code_line){
     code_line[line]=block->nextFree;
     printf("ret\n");
     // mov -X(%ebp),%eax ou x(%ebp)
+    unsigned char local_pilha = 0xFC - 4;
     block->code[block->nextFree] = 0x8B;
     block->nextFree ++;
     block->code[block->nextFree] = 0x45;
     block->nextFree ++;
-    block->code[block->nextFree] = 0x00;
+    block->code[block->nextFree] = local_pilha
     block->nextFree ++;
     // leave ret
     block->code[block->nextFree] = 0xC9;
