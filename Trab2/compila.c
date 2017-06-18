@@ -30,7 +30,7 @@ void retorno(FILE *myfp, int line, int c, Memory *block, int *code_line){
     block->nextFree ++;
     block->code[block->nextFree] = 0x45;
     block->nextFree ++;
-    block->code[block->nextFree] = local_pilha
+    block->code[block->nextFree] = local_pilha;
     block->nextFree ++;
     // leave ret
     block->code[block->nextFree] = 0xC9;
@@ -342,6 +342,10 @@ funcp compila (FILE *myfp){
     fscanf(myfp, " ");
   }
   printf("\nChegou fim\n");
+  end_code(block);
+  int i;
+  for(i=0;i<block->nextFree;i++)
+  printf("Char:%x\n",block->code[i]);
 
   return (funcp)block->code;
 }
