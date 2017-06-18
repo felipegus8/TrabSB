@@ -17,7 +17,7 @@ static void error (const char *msg, int line) {
   exit(EXIT_FAILURE);
 }
 
-void retorno(FILE *myfp, int line, int c,Memory *block){
+void retorno(FILE *myfp, int line, int c, Memory *block){
   char c0;
   if (fscanf(myfp, "et%c", &c0) != 1){
     error("comando invalido", line);
@@ -203,21 +203,7 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block){
   }
 }
 
-
-funcAlloc(func,cmpZeroEdx,sizeof(cmpZeroEdx),&posFunc);	// cmp $0,%edx
-
-jmpLower[1] = (int)&func[endArray[(code[i].info.i->l1)-1]] - (int)&func[posFunc+sizeof(jmpLower)];
-funcAlloc(func,jmpLower,sizeof(jmpLower),&posFunc);	// jl linhaX
-
-jmpEqual[1] =  (int)&func[endArray[(code[i].info.i->l2)-1]] - (int)&func[posFunc+sizeof(jmpEqual)];
-funcAlloc(func,jmpEqual,sizeof(jmpEqual),&posFunc);	// je linhaX
-
-jmpGreater[1] =  (int)&func[endArray[(code[i].info.i->l3)-1]] - (int)&func[posFunc+sizeof(jmpGreater)];
-funcAlloc(func,jmpGreater,sizeof(jmpGreater),&posFunc);	// jg linhaX
-free(code[i].info.i);
-break;
-
-void desvia(FILE *myfp, int line, char *text){
+void desvia(FILE *myfp, int line, int c, Memory *block){
   char var0;
   int idx0, num;
   if (fscanf(myfp, "f %c%d %d", &var0, &idx0, &num) != 3){
