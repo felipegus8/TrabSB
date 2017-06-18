@@ -17,11 +17,12 @@ static void error (const char *msg, int line) {
   exit(EXIT_FAILURE);
 }
 
-void retorno(FILE *myfp, int line, int c, Memory *block){
+void retorno(FILE *myfp, int line, int c, Memory *block, int *code_line){
   char c0;
   if (fscanf(myfp, "et%c", &c0) != 1){
     error("comando invalido", line);
   }else{
+    code_line[line]=block->nextFree;
     printf("ret\n");
     // mov -X(%ebp),%eax ou x(%ebp)
     block->code[block->nextFree] = 0x8B;
@@ -38,12 +39,13 @@ void retorno(FILE *myfp, int line, int c, Memory *block){
   }
 }
 
-void atribuicao(FILE *myfp, int line, int c,Memory *block){
+void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
   int idx0, idx1, idx2;
   char var0 = c, var1, var2, op;
   if (fscanf(myfp, "%d = %c%d %c %c%d", &idx0, &var1, &idx1,&op, &var2, &idx2) != 6){
     error("comando invalido", line);
   }else{
+    code_line[line]=block->nextFree;
     printf("%c%d = %c%d %c %c%d\n",var0, idx0, var1, idx1, op, var2, idx2);
     switch (var1) {
       case 'p':
@@ -52,13 +54,13 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block){
       block->code[block->nextFree] = 0x89;
       block->nextFree ++;
       if (idx1 == 1) //Parâmetro está no %edi
-        //movl %edi,%r12d
-        block->code[block->nextFree] = 0xFC;
+      //movl %edi,%r12d
+      block->code[block->nextFree] = 0xFC;
       else  //Parâmetro está no %esi
-        //movl %esi,%r12d
-        block->code[block->nextFree] = 0xF4;
+      //movl %esi,%r12d
+      block->code[block->nextFree] = 0xF4;
 
-        block->nextFree ++;
+      block->nextFree ++;
       case 'v':
       //No caso de uma variável local,ela tem que estar na pilha.Só tem que descobrir em que posição.
       //Os três primeiros códigos são iguais.
@@ -95,53 +97,53 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block){
     }
 
     switch (var2) {
-    case 'p':
-    block->code[block->nextFree] = 0x41;
-    block->nextFree ++;
-    block->code[block->nextFree] = 0x89;
-    block->nextFree ++;
-    if (idx1 == 1)  //Parâmetro está no %edi
-    //movl %edi,%r13d
-    block->code[block->nextFree] = 0xFD;
-    else  //Parâmetro está no %esi
-     //movl %esi,%r13d
-     block->code[block->nextFree] = 0xF5;
+      case 'p':
+      block->code[block->nextFree] = 0x41;
+      block->nextFree ++;
+      block->code[block->nextFree] = 0x89;
+      block->nextFree ++;
+      if (idx1 == 1)  //Parâmetro está no %edi
+      //movl %edi,%r13d
+      block->code[block->nextFree] = 0xFD;
+      else  //Parâmetro está no %esi
+      //movl %esi,%r13d
+      block->code[block->nextFree] = 0xF5;
 
-     block->nextFree ++;
-    case 'v':
-    //Mesmo caso do primeiro switch.Só muda aqui é que está movendo para %r13d.
-    block->code[block->nextFree] = 0x44;
-    block->nextFree ++;
-    block->code[block->nextFree] = 0x8B;
-    block->nextFree ++;
-    block->code[block->nextFree] = 0x6D;
-    block->nextFree ++;
+      block->nextFree ++;
+      case 'v':
+      //Mesmo caso do primeiro switch.Só muda aqui é que está movendo para %r13d.
+      block->code[block->nextFree] = 0x44;
+      block->nextFree ++;
+      block->code[block->nextFree] = 0x8B;
+      block->nextFree ++;
+      block->code[block->nextFree] = 0x6D;
+      block->nextFree ++;
 
-    //O quarto muda de acordo com o número da variável,que indica onde ela está na pilha.
-    unsigned char local_pilha = 0xFC - (var2 * 4);
-    block->code[block->nextFree] = local_pilha;
-    block->nextFree ++;
+      //O quarto muda de acordo com o número da variável,que indica onde ela está na pilha.
+      unsigned char local_pilha = 0xFC - (var2 * 4);
+      block->code[block->nextFree] = local_pilha;
+      block->nextFree ++;
 
-    case '$':
-    //movl $const,%r13d
-    //41 BC (Próximos 4 bytes correpondem ao número em si em hexa.Por isso faço os shifts)
-    block->code[block->nextFree] = 0x41;
-    block->nextFree ++;
-    block->code[block->nextFree] = 0xBD;
-    block->nextFree ++;
-    block->code[block->nextFree] = (char) idx1;
-    block->nextFree ++;
-    block->code[block->nextFree] = (char) idx1 >> 8;
-    block->nextFree ++;
-    block->code[block->nextFree] = (char) idx1 >> 16;
-    block->nextFree ++;
-    block->code[block->nextFree] = (char) idx1 >> 24;
-    block->nextFree ++;
-  }
+      case '$':
+      //movl $const,%r13d
+      //41 BC (Próximos 4 bytes correpondem ao número em si em hexa.Por isso faço os shifts)
+      block->code[block->nextFree] = 0x41;
+      block->nextFree ++;
+      block->code[block->nextFree] = 0xBD;
+      block->nextFree ++;
+      block->code[block->nextFree] = (char) idx1;
+      block->nextFree ++;
+      block->code[block->nextFree] = (char) idx1 >> 8;
+      block->nextFree ++;
+      block->code[block->nextFree] = (char) idx1 >> 16;
+      block->nextFree ++;
+      block->code[block->nextFree] = (char) idx1 >> 24;
+      block->nextFree ++;
+    }
 
-  switch (op) {
-    //Três casos.Add,Sub e Mul,todos de %r13d em %r12d
-    case '+':
+    switch (op) {
+      //Três casos.Add,Sub e Mul,todos de %r13d em %r12d
+      case '+':
       // 45 01 ec     add %r13d,%r12d
       block->code[block->nextFree] = 0x45;
       block->nextFree ++;
@@ -150,7 +152,7 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block){
       block->code[block->nextFree] = 0xEC;
       block->nextFree ++;
 
-    case '-':
+      case '-':
       //45 29 EC   sub %r13d,%r12d
       block->code[block->nextFree] = 0x45;
       block->nextFree ++;
@@ -159,7 +161,7 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block){
       block->code[block->nextFree] = 0xEC;
       block->nextFree ++;
 
-    case '*':
+      case '*':
       //45 of af e5 imul %r13d,%r12d
       block->code[block->nextFree] = 0x45;
       block->nextFree ++;
@@ -169,59 +171,60 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block){
       block->nextFree ++;
       block->code[block->nextFree] = 0xE5;
       block->nextFree ++;
-  }
+    }
   }
 
   switch (var0) {
-  case 'v':
-  //Agora tem que colocar o que está em %r12d no lugar certo na pilha.
-  //Só o que muda no código de máquina de uma posição da pilha para outra são os dois últimos dígitos que variam de acordo com o lugar onde a variavel está sendo colocada.
-  //O início sempre é 44 89 65
-  block->code[block->nextFree] = 0x44;
-  block->nextFree ++;
-  block->code[block->nextFree] = 0x89;
-  block->nextFree ++;
-  block->code[block->nextFree] = 0x65;
-  block->nextFree ++;
+    case 'v':
+    //Agora tem que colocar o que está em %r12d no lugar certo na pilha.
+    //Só o que muda no código de máquina de uma posição da pilha para outra são os dois últimos dígitos que variam de acordo com o lugar onde a variavel está sendo colocada.
+    //O início sempre é 44 89 65
+    block->code[block->nextFree] = 0x44;
+    block->nextFree ++;
+    block->code[block->nextFree] = 0x89;
+    block->nextFree ++;
+    block->code[block->nextFree] = 0x65;
+    block->nextFree ++;
 
-  //O maior código de máquina é o da primeira posição.(0xFC).Ele diminui de 4 a cada próxima posição.
-  unsigned char local_pilha = 0xFC - (var0 * 4);
-  block->code[block->nextFree] = local_pilha;
-  block->nextFree ++;
+    //O maior código de máquina é o da primeira posição.(0xFC).Ele diminui de 4 a cada próxima posição.
+    unsigned char local_pilha = 0xFC - (var0 * 4);
+    block->code[block->nextFree] = local_pilha;
+    block->nextFree ++;
 
-  case 'p':
-  block->code[block->nextFree] = 0x44;
-  block->nextFree ++;
-  block->code[block->nextFree] = 0x89;
-  block->nextFree ++;
-  if (idx0 == 1) //mover para %edi
+    case 'p':
+    block->code[block->nextFree] = 0x44;
+    block->nextFree ++;
+    block->code[block->nextFree] = 0x89;
+    block->nextFree ++;
+    if (idx0 == 1) //mover para %edi
     block->code[block->nextFree] = 0xE7;
-  else   //mover para %esi
+    else   //mover para %esi
     block->code[block->nextFree] = 0xE6;
 
-  block->nextFree ++;
+    block->nextFree ++;
   }
 }
 
-void desvia(FILE *myfp, int line, int c, Memory *block){
+void desvia(FILE *myfp, int line, int c, Memory *block,int *code_line){
   char var0;
   int idx0, num;
   if (fscanf(myfp, "f %c%d %d", &var0, &idx0, &num) != 3){
     error("comando invalido", line);
   }else{
+    code_line[line]=block->nextFree;
     if(block->nextFree < num){
       error("Numero de linha para JUMP inexistente",line);
     }else{
       unsigned char local_pilha;
       switch (var0) {
         case 'p':
-          if(idx0==1){
-            local_pilha=0xFD;
-          }else{
-            local_pilha=0xF5;
-          }
+        if(idx0==1){
+          local_pilha=0xFD;
+        }else{
+          local_pilha=0xF5;
+        }
         case 'v':
-          local_pilha = 0xFC - (var0 * 4);
+        local_pilha = 0xFC - (var0 * 4);
       }
       printf("if %c%d %d\n", var0, idx0, num);
       // mov -X(%ebp),%edx ou x(%ebp)
@@ -241,7 +244,7 @@ void desvia(FILE *myfp, int line, int c, Memory *block){
       // jl linhaX
       block->code[block->nextFree] = 0x7C;
       block->nextFree ++;
-      block->code[block->nextFree] = block->code[num-1];
+      block->code[block->nextFree] = block->code[code_line[num-1]];
       block->nextFree ++;
       // je linhaX
       block->code[block->nextFree] = 0x74;
@@ -251,7 +254,7 @@ void desvia(FILE *myfp, int line, int c, Memory *block){
       // jg linhaX
       block->code[block->nextFree] = 0x7F;
       block->nextFree ++;
-      block->code[block->nextFree] = block->code[num-1];
+      block->code[block->nextFree] = block->code[code_line[num-1]];
       block->nextFree ++;
     }
   }
@@ -312,24 +315,24 @@ Memory *init_memory() {
   return init;
 }
 funcp compila (FILE *myfp){
-  char code[100];
-  int line = 8;
+  int code_line[50];
+  int line = 0;
   int  c;
   Memory *block = init_memory();
   init_func(block);
   while ((c = fgetc(myfp)) != EOF) {
     switch (c) {
       case 'r': { /* retorno */
-        retorno(myfp,line,c,block);
+        retorno(myfp,line,c,block,code_line);
         break;
       }
       case 'v':
       case 'p': {  /* atribuicao */
-        atribuicao(myfp,line,c,block);
+        atribuicao(myfp,line,c,block,code_line);
         break;
       }
       case 'i': { /* desvio */
-        desvia(myfp,line,c,block);
+        desvia(myfp,line,c,block,code_line);
         break;
       }
       default: error("comando desconhecido", line);
