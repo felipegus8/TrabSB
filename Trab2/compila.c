@@ -203,13 +203,70 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block){
 }
 
 
+funcAlloc(func,cmpZeroEdx,sizeof(cmpZeroEdx),&posFunc);	// cmp $0,%edx
+
+jmpLower[1] = (int)&func[endArray[(code[i].info.i->l1)-1]] - (int)&func[posFunc+sizeof(jmpLower)];
+funcAlloc(func,jmpLower,sizeof(jmpLower),&posFunc);	// jl linhaX
+
+jmpEqual[1] =  (int)&func[endArray[(code[i].info.i->l2)-1]] - (int)&func[posFunc+sizeof(jmpEqual)];
+funcAlloc(func,jmpEqual,sizeof(jmpEqual),&posFunc);	// je linhaX
+
+jmpGreater[1] =  (int)&func[endArray[(code[i].info.i->l3)-1]] - (int)&func[posFunc+sizeof(jmpGreater)];
+funcAlloc(func,jmpGreater,sizeof(jmpGreater),&posFunc);	// jg linhaX
+free(code[i].info.i);
+break;
+
 void desvia(FILE *myfp, int line, char *text){
   char var0;
   int idx0, num;
   if (fscanf(myfp, "f %c%d %d", &var0, &idx0, &num) != 3){
     error("comando invalido", line);
   }else{
-    printf("if %c%d %d\n", var0, idx0, num);
+    if(block->nextFree < num){
+      error("Numero de linha para JUMP inexistente");
+    }else{
+      unsigned char local_pilha;
+      switch (var0) {
+        case 'p':
+          if(idx0==1){
+            local_pilha=0xFD;
+          }else{
+            local_pilha=0xF5;
+          }
+        case 'v':
+          local_pilha = 0xFC - (var0 * 4);
+      }
+      printf("if %c%d %d\n", var0, idx0, num);
+      // mov -X(%ebp),%edx ou x(%ebp)
+      block->code[block->nextFree] = 0x8B;
+      block->nextFree ++;
+      block->code[block->nextFree] = 0x55;
+      block->nextFree ++;
+      block->code[block->nextFree] = local_pilha;
+      block->nextFree ++;
+      // cmp $0,%edx
+      block->code[block->nextFree] = 0x83;
+      block->nextFree ++;
+      block->code[block->nextFree] = 0xFA;
+      block->nextFree ++;
+      block->code[block->nextFree] = 0x00;
+      block->nextFree ++;
+      // jl linhaX
+      block->code[block->nextFree] = 0x7C;
+      block->nextFree ++;
+      block->code[block->nextFree] = block->code[num-1];
+      block->nextFree ++;
+      // je linhaX
+      block->code[block->nextFree] = 0x74;
+      block->nextFree ++;
+      block->code[block->nextFree] = block->code[block->nextFree];
+      block->nextFree ++;
+      // jg linhaX
+      block->code[block->nextFree] = 0x7F;
+      block->nextFree ++;
+      block->code[block->nextFree] = block->code[num-1];
+      block->nextFree ++;
+    }
   }
 }
 typedef int (*funcp) ();
