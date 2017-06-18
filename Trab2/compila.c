@@ -212,7 +212,7 @@ void desvia(FILE *myfp, int line, int c, Memory *block,int *code_line){
     error("comando invalido", line);
   }else{
     code_line[line]=block->nextFree;
-    if(block->nextFree < num){
+    if(line < num){
       error("Numero de linha para JUMP inexistente",line);
     }else{
       unsigned char local_pilha;
