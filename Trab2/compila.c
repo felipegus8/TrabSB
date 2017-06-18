@@ -210,7 +210,7 @@ void desvia(FILE *myfp, int line, int c, Memory *block){
     error("comando invalido", line);
   }else{
     if(block->nextFree < num){
-      error("Numero de linha para JUMP inexistente");
+      error("Numero de linha para JUMP inexistente",line);
     }else{
       unsigned char local_pilha;
       switch (var0) {
@@ -329,7 +329,7 @@ funcp compila (FILE *myfp){
         break;
       }
       case 'i': { /* desvio */
-        desvia(myfp,line,code);
+        desvia(myfp,line,c,block);
         break;
       }
       default: error("comando desconhecido", line);
