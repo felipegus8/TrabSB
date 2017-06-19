@@ -42,7 +42,7 @@ void retorno(FILE *myfp, int line, int c, Memory *block, int *code_line){
     error("comando invalido", line);
   }else{
     code_line[line]=block->nextFree;
-    printf("ret\n");
+  //  printf("ret\n");
     // mov -X(%ebp),%eax ou x(%ebp)
     //Sempre tem que retornar o que está em v1
     unsigned char local_pilha = 0xFC;
@@ -65,7 +65,7 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
     error("comando invalido", line);
   }else{
     code_line[line]=block->nextFree;
-    printf("%c%d = %c%d %c %c%d\n",var0, idx0, var1, idx1, op, var2, idx2);
+  //  printf("%c%d = %c%d %c %c%d\n",var0, idx0, var1, idx1, op, var2, idx2);
     switch (var1) {
       case 'p':
       block->code[block->nextFree] = 0x41;
@@ -269,7 +269,7 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
         block->nextFree ++;
         break;
       }
-      printf("if %c%d %d\n", var0, idx0, num);
+    //  printf("if %c%d %d\n", var0, idx0, num);
 
       if(temp < num){
         int nxtfree = block->nextFree;
@@ -386,9 +386,10 @@ funcp compila (FILE *myfp){
     line ++;
     fscanf(myfp, " ");
   }
-  int i;
-  for(i=0;i<block->nextFree;i++)
-  printf("Char:%x\n",block->code[i]);
+  //Descomentar essa parte se quiser ver o código de máquina
+  // int i;
+  // for(i=0;i<block->nextFree;i++)
+  // printf("Char:%x\n",block->code[i]);
 
   return (funcp)(&block->code[0]);
 }
