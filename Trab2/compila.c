@@ -241,7 +241,7 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
 void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
   char var0;
   int idx0, num;
-  int temp = *line
+  int temp = *line;
   if (fscanf(myfp, "f %c%d %d", &var0, &idx0, &num) != 3){
     error("comando invalido", temp);
   }else{
@@ -277,6 +277,7 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
 
         int nxtfree = block->nextFree;
         block->nextFree ++;
+        fscanf(myfp, " ");
         while (temp < num) {
           if((c = fgetc(myfp)) != EOF){
             switch (c) {
@@ -336,7 +337,7 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
       block->nextFree ++;
       block->code[block->nextFree] = block->code[code_line[num-1]];
       block->nextFree ++;
-      
+
       *line = temp;
   }
 }
