@@ -238,13 +238,14 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
   }
 }
 
-void desvia(FILE *myfp, int line, int c, Memory *block,int *code_line){
+void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
   char var0;
   int idx0, num;
+  int temp = *line
   if (fscanf(myfp, "f %c%d %d", &var0, &idx0, &num) != 3){
-    error("comando invalido", line);
+    error("comando invalido", temp);
   }else{
-    code_line[line]=block->nextFree;
+    code_line[temp]=block->nextFree;
       unsigned char local_pilha;
       switch (var0) {
         case 'p':
@@ -272,32 +273,32 @@ void desvia(FILE *myfp, int line, int c, Memory *block,int *code_line){
       block->code[block->nextFree] = 0x00;
       block->nextFree ++;
 
-      if(line < num){
+      if(temp < num){
 
         int nxtfree = block->nextFree;
         block->nextFree ++;
-        while (line < num) {
+        while (temp < num) {
           if((c = fgetc(myfp)) != EOF){
             switch (c) {
               case 'r': { /* retorno */
-                retorno(myfp,line,c,block,code_line);
+                retorno(myfp,temp,c,block,code_line);
                 break;
               }
               case 'v':
               case 'p': {  /* atribuicao */
-                atribuicao(myfp,line,c,block,code_line);
+                atribuicao(myfp,temp,c,block,code_line);
                 break;
               }
               case 'i': { /* desvio */
-                desvia(myfp,line,c,block,code_line);
+                desvia(myfp,&temp,c,block,code_line);
                 break;
               }
-              default: error("comando desconhecido", line);
+              default: error("comando desconhecido", temp);
             }
-            line ++;
+            temp ++;
             fscanf(myfp, " ");
           }else{
-            error("Numero de linha para JUMP inexistente", line);
+            error("Numero de linha para JUMP inexistente", temp);
             exit (1);
           }
         }
@@ -335,6 +336,8 @@ void desvia(FILE *myfp, int line, int c, Memory *block,int *code_line){
       block->nextFree ++;
       block->code[block->nextFree] = block->code[code_line[num-1]];
       block->nextFree ++;
+      
+      *line = temp;
   }
 }
 typedef int (*funcp) ();
@@ -394,7 +397,7 @@ funcp compila (FILE *myfp){
         break;
       }
       case 'i': { /* desvio */
-        desvia(myfp,line,c,block,code_line);
+        desvia(myfp,&line,c,block,code_line);
         break;
       }
       default: error("comando desconhecido", line);
