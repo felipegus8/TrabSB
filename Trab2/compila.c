@@ -305,17 +305,17 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
         // jl linhaX
         block->code[nxtfree] = 0x7C;
         block->nextFree ++;
-        block->code[block->nextFree] = (char)(code_line[num-1] - nxtfree);
+        block->code[block->nextFree] = (char)(code_line[num-1] - (block->nextFree+1));
         block->nextFree ++;
         // je linhaX
         block->code[nxtfree] = 0x74;
         block->nextFree ++;
-        block->code[block->nextFree] = (char)(nxtfree);
+        block->code[block->nextFree] = (char)((block->nextFree+1));
         block->nextFree ++;
         // jg linhaX
         block->code[nxtfree] = 0x7F;
         block->nextFree ++;
-        block->code[block->nextFree] = (char)(code_line[num-1] - nxtfree);
+        block->code[block->nextFree] = (char)(code_line[num-1] -(block->nextFree+1));
         block->nextFree ++;
 
       }
@@ -323,20 +323,17 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
       // jl linhaX
       block->code[block->nextFree] = 0x7C;
       block->nextFree ++;
-      int nxtfree = block->nextFree;
-      block->code[block->nextFree] = (char)(code_line[num-1] - (nxtfree+1));
+      block->code[block->nextFree] = (char)(code_line[num-1] - (block->nextFree+1));
       block->nextFree ++;
       // je linhaX
       block->code[block->nextFree] = 0x74;
       block->nextFree ++;
-      int nxtfree = block->nextFree;
-      block->code[block->nextFree] = (char)nxtfree;
+      block->code[block->nextFree] = (char)(block->nextFree +1);
       block->nextFree ++;
       // jg linhaX
       block->code[block->nextFree] = 0x7F;
       block->nextFree ++;
-      int nxtfree = block->nextFree;
-      block->code[block->nextFree] = (char)(code_line[num-1] - (nxtfree+1));
+      block->code[block->nextFree] = (char)(code_line[num-1] - (block->nextFree+1));
       block->nextFree ++;
 
       *line = temp;
