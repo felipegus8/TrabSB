@@ -6,6 +6,41 @@ o mesmo que o da linguagem bem simples, e também usando o objdump para analisar
 de uma maneira mais aprofundada.Não foram encontrados erros que possam prejudicar o funcionamento
 do programa. Usamos editores de texto para escrever o código e testamos eles por meio do terminal
 usando o gcc. Separamos a conversão para a linguagem de máquina em algumas funções.
+Os programas em Simples usados para testes foram os 4 exemplos que estão no enunciado do Trabalho, ou seja:
+Programa 1:
+v1 = p1 + $1        
+ret                
+
+Programa 2:
+v1 = p1 + p2    
+p1 = p1 - p2       
+v1 = v1 * p1        
+ret                  
+
+Programa 3:
+
+v1 = $0 + $1      
+if p1 4         
+ret                   
+v1 = v1 * p1          
+p1 = p1 - $1         
+if p1 4               
+ret                   
+
+Programa 4:
+
+v1 = $0 + $0        
+v2 = $1 + $0          
+p1 = p1 + $1         
+v3 = p1 - v2       
+if v3 7           
+ret                  
+v3 = v2 * v2         
+v1 = v1 + v3         
+v2 = v2 + $1     
+if v2 4               
+
+Os testes sobre esses programas funcionaram como esperado.Todos esses programas também foram testados usando uma main.
 
 Não tivemos dificuldade para fazer a função retorno. Depois de analisar uma função em assembly bem
 simples conseguimos entender como ela funciona e quais seriam os seus comandos. Depois começamos a
@@ -17,3 +52,4 @@ linha que seria desviada para ser usada. Começamos então a pensar como seria f
 comando de cada linha para assim fazer a conta necessária para o desvio. Usamos um vetor para guardar a
 posição desse primeiro comando. Esse vetor estava sendo usado de maneira errada. Após analisar posição
 por posição que era guardada no vetor conseguimos encontrar o erro e assim consertar a função desvia.
+A função de atribuição não foi tão difícil quanto a função de desvio.Foi feita da mesma forma que as outras, analisando o código de máquina de cada instrução possível.Essa função acabou ficando com vários switch cases porque para cada variável ou operador tem que ver todos os casos que ele pode ser.Depois de executar alguns testes alguns bugs foram percebidos na função.Todos esses bugs foram corrigidos e agora a função está funcionando.

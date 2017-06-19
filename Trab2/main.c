@@ -4,7 +4,6 @@
 typedef int (*funcp) ();
 
 int main(void){
-  funcp f;
   FILE *myfp;
   funcp retorno;
   int i;

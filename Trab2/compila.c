@@ -12,6 +12,8 @@ struct memory {
 };
 typedef struct memory Memory;
 
+typedef int (*funcp) ();
+
 static void error (const char *msg, int line) {
   fprintf(stderr, "erro %s na linha %d\n", msg, line);
   exit(EXIT_FAILURE);
@@ -50,11 +52,8 @@ void retorno(FILE *myfp, int line, int c, Memory *block, int *code_line){
     block->nextFree ++;
     block->code[block->nextFree] = local_pilha;
     block->nextFree ++;
-    // // leave ret
-    // block->code[block->nextFree] = 0xC9;
-    // block->nextFree ++;
-    // block->code[block->nextFree] = 0xC3;
-    // block->nextFree ++;
+
+    //Chama a função para finalizar o código com as instruções padrão
     end_code(block);
   }
 }
@@ -250,19 +249,18 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
       block->nextFree ++;
       switch (var0) {
         case 'p':
-        if(idx0==1){
-          //local_pilha=0xFD;
+        if(idx0==1) {
           block->code[block->nextFree] = 0xFF;
-        }else{
-        //  local_pilha=0xF5;
+        }
+        else {
         block->code[block->nextFree] = 0xFE;
         }
         block->nextFree ++;
         block->code[block->nextFree] = 0x00;
         block->nextFree ++;
         break;
+
         case 'v':
-        //local_pilha = 0xFC - (var0 * 4);
         block->code[block->nextFree] = 0x7D;
         block->nextFree ++;
         block->code[block->nextFree] = 0xFC - ((idx0 - 1) * 4);
@@ -304,12 +302,13 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
           }
         }
         // jne linhaX
+        //Sempre usamos Jump Not Equal depois de ter sido feita uma comparação com zero.
         block->code[nxtfree] = 0x75;
         block->code[nxtfree + 1] = &block->code[code_line[num - 1]] - &block->code[nxtfree + 2];
 
       }
       else {
-      // jl linhaX
+      // jne linhaX
       block->code[block->nextFree] = 0x75;
       block->nextFree ++;
       block->code[block->nextFree] = &block->code[code_line[num - 1]] - &block->code[block->nextFree + 1];
@@ -318,9 +317,10 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
       *line = temp;
   }
 }
-typedef int (*funcp) ();
+
 
 void init_func (Memory *block) {
+  //Função para inicializar o código com o prólogo padrão de Assembly.
   unsigned char init[8];
   int i;
   //0:	55                   	push   %rbp
@@ -347,6 +347,7 @@ void init_func (Memory *block) {
 
 
 Memory *init_memory() {
+  //Função para alocar o espaço de memória necessário onde será inserido o código de máquina.
   Memory *init;
   init = (Memory*)malloc (sizeof(Memory));
   init->nextFree = 0;
@@ -357,6 +358,8 @@ Memory *init_memory() {
   }
   return init;
 }
+
+
 funcp compila (FILE *myfp){
   int code_line[50];
   int line = 0;
@@ -378,12 +381,11 @@ funcp compila (FILE *myfp){
         desvia(myfp,&line,c,block,code_line);
         break;
       }
-      default: error("comando desconhecido", line);
+      default: error("Comando Desconhecido", line);
     }
     line ++;
     fscanf(myfp, " ");
   }
-  printf("\nChegou fim\n");
   int i;
   for(i=0;i<block->nextFree;i++)
   printf("Char:%x\n",block->code[i]);
