@@ -274,9 +274,8 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
       block->nextFree ++;
 
       if(temp < num){
-
         int nxtfree = block->nextFree;
-        block->nextFree ++;
+        block->nextFree +=2;
         fscanf(myfp, " ");
         while (temp < num) {
           if((c = fgetc(myfp)) != EOF){
@@ -303,21 +302,20 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
             exit (1);
           }
         }
-
         // jl linhaX
         block->code[nxtfree] = 0x7C;
         block->nextFree ++;
-        block->code[block->nextFree] = block->code[code_line[num-1]];
+        block->code[block->nextFree] = (char)(code_line[num-1] - nxtfree);
         block->nextFree ++;
         // je linhaX
         block->code[nxtfree] = 0x74;
         block->nextFree ++;
-        block->code[block->nextFree] = block->code[block->nextFree];
+        block->code[block->nextFree] = (char)(nxtfree);
         block->nextFree ++;
         // jg linhaX
         block->code[nxtfree] = 0x7F;
         block->nextFree ++;
-        block->code[block->nextFree] = block->code[code_line[num-1]];
+        block->code[block->nextFree] = (char)(code_line[num-1] - nxtfree);
         block->nextFree ++;
 
       }
@@ -325,17 +323,20 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
       // jl linhaX
       block->code[block->nextFree] = 0x7C;
       block->nextFree ++;
-      block->code[block->nextFree] = block->code[code_line[num-1]];
+      int nxtfree = block->nextFree;
+      block->code[block->nextFree] = (char)(code_line[num-1] - (nxtfree+1));
       block->nextFree ++;
       // je linhaX
       block->code[block->nextFree] = 0x74;
       block->nextFree ++;
-      block->code[block->nextFree] = block->code[block->nextFree];
+      int nxtfree = block->nextFree;
+      block->code[block->nextFree] = (char)nxtfree;
       block->nextFree ++;
       // jg linhaX
       block->code[block->nextFree] = 0x7F;
       block->nextFree ++;
-      block->code[block->nextFree] = block->code[code_line[num-1]];
+      int nxtfree = block->nextFree;
+      block->code[block->nextFree] = (char)(code_line[num-1] - (nxtfree+1));
       block->nextFree ++;
 
       *line = temp;
