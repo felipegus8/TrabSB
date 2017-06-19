@@ -279,6 +279,7 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
       if(temp < num){
         int nxtfree = block->nextFree;
         block->nextFree +=2;
+        temp++;
         fscanf(myfp, " ");
         while (temp < num) {
           if((c = fgetc(myfp)) != EOF){
@@ -308,10 +309,6 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
         // jne linhaX
         block->code[nxtfree] = 0x75;
         block->code[nxtfree + 1] = &block->code[code_line[num - 1]] - &block->code[nxtfree + 2];
-        printf("Code-Line::::::::::\n%x\n",&block->code[code_line[1]]);
-        printf("Code-Line::::::::::\n%x\n",&block->code[27]);
-
-        printf("nextFree::::::::::\n%c\n",&block->code[nxtfree + 2]);
         // // je linhaX
         // block->code[nxtfree] = 0x74;
         // block->nextFree ++;
