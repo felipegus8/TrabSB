@@ -264,8 +264,6 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
         break;
         case 'v':
         //local_pilha = 0xFC - (var0 * 4);
-        block->code[block->nextFree] = 0x83;
-        block->nextFree ++;
         block->code[block->nextFree] = 0x7D;
         block->nextFree ++;
         block->code[block->nextFree] = 0xFC - ((idx0 - 1) * 4);
