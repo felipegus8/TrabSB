@@ -158,13 +158,13 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
       block->nextFree ++;
       block->code[block->nextFree] = 0xBD;
       block->nextFree ++;
-      block->code[block->nextFree] = (char) idx1;
+      block->code[block->nextFree] = (char) idx2;
       block->nextFree ++;
-      block->code[block->nextFree] = (char) idx1 >> 8;
+      block->code[block->nextFree] = (char) idx2 >> 8;
       block->nextFree ++;
-      block->code[block->nextFree] = (char) idx1 >> 16;
+      block->code[block->nextFree] = (char) idx2 >> 16;
       block->nextFree ++;
-      block->code[block->nextFree] = (char) idx1 >> 24;
+      block->code[block->nextFree] = (char) idx2 >> 24;
       block->nextFree ++;
       break;
     }
@@ -247,31 +247,42 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
   }else{
     code_line[temp]=block->nextFree;
       unsigned char local_pilha;
+      block->code[block->nextFree] = 0x83;
+      block->nextFree ++;
       switch (var0) {
         case 'p':
         if(idx0==1){
-          local_pilha=0xFD;
+          //local_pilha=0xFD;
+          block->code[block->nextFree] = 0xFF;
         }else{
-          local_pilha=0xF5;
+        //  local_pilha=0xF5;
+        block->code[block->nextFree] = 0xFE;
         }
+        block->nextFree ++;
+        block->code[block->nextFree] = 0x00;
+        block->nextFree ++;
+        break;
         case 'v':
-        local_pilha = 0xFC - (var0 * 4);
+        //local_pilha = 0xFC - (var0 * 4);
+        block->code[block->nextFree] = 0x83;
+        block->nextFree ++;
+        block->code[block->nextFree] = 0x7D;
+        block->nextFree ++;
+        block->code[block->nextFree] = 0xFC - ((idx0 - 1) * 4);
+        block->nextFree ++;
+        block->code[block->nextFree] = 0x00;
+        block->nextFree ++;
+        break;
       }
       printf("if %c%d %d\n", var0, idx0, num);
-      // mov -X(%ebp),%edx ou x(%ebp)
-      block->code[block->nextFree] = 0x8B;
-      block->nextFree ++;
-      block->code[block->nextFree] = 0x55;
-      block->nextFree ++;
-      block->code[block->nextFree] = local_pilha;
-      block->nextFree ++;
+      // // mov -X(%ebp),%edx ou x(%ebp)
+      // block->code[block->nextFree] = 0x8B;
+      // block->nextFree ++;
+      // block->code[block->nextFree] = 0x55;
+      // block->nextFree ++;
+      // block->code[block->nextFree] = local_pilha;
+      // block->nextFree ++;
       // cmp $0,%edx
-      block->code[block->nextFree] = 0x83;
-      block->nextFree ++;
-      block->code[block->nextFree] = 0xFA;
-      block->nextFree ++;
-      block->code[block->nextFree] = 0x00;
-      block->nextFree ++;
 
       if(temp < num){
         int nxtfree = block->nextFree;
