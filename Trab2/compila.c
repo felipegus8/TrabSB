@@ -246,7 +246,6 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
     error("comando invalido", temp);
   }else{
     code_line[temp]=block->nextFree;
-      unsigned char local_pilha;
       block->code[block->nextFree] = 0x83;
       block->nextFree ++;
       switch (var0) {
@@ -307,16 +306,6 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
         // jne linhaX
         block->code[nxtfree] = 0x75;
         block->code[nxtfree + 1] = &block->code[code_line[num - 1]] - &block->code[nxtfree + 2];
-        // // je linhaX
-        // block->code[nxtfree] = 0x74;
-        // block->nextFree ++;
-        // block->code[block->nextFree] = (char)((block->nextFree+1));
-        // block->nextFree ++;
-        // // jg linhaX
-        // block->code[nxtfree] = 0x7F;
-        // block->nextFree ++;
-        // block->code[block->nextFree] = (char)(code_line[num-1] -(block->nextFree+1));
-        // block->nextFree ++;
 
       }
       else {
@@ -325,17 +314,6 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
       block->nextFree ++;
       block->code[block->nextFree] = &block->code[code_line[num - 1]] - &block->code[block->nextFree + 1];
       block->nextFree ++;
-
-      // // je linhaX
-      // block->code[block->nextFree] = 0x74;
-      // block->nextFree ++;
-      // block->code[block->nextFree] = (char)(block->nextFree +1);
-      // block->nextFree ++;
-      // // jg linhaX
-      // block->code[block->nextFree] = 0x7F;
-      // block->nextFree ++;
-      // block->code[block->nextFree] = (char)(code_line[num-1] - (block->nextFree+1));
-      // block->nextFree ++;
     }
       *line = temp;
   }
@@ -410,5 +388,5 @@ funcp compila (FILE *myfp){
   for(i=0;i<block->nextFree;i++)
   printf("Char:%x\n",block->code[i]);
 
-  return (funcp)block->code;
+  return (funcp)(&block->code[0]);
 }

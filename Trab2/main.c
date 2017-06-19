@@ -14,6 +14,7 @@ int main(void){
     exit(1);
   }
   retorno = compila(myfp);
-
+  i = (*retorno)(3);
+  printf("\ni = %d\n", i);
   return 0;
 }
