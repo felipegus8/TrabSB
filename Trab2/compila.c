@@ -17,6 +17,23 @@ static void error (const char *msg, int line) {
   exit(EXIT_FAILURE);
 }
 
+void end_code (Memory *block) {
+  //Instruções para finalizar o programa
+  //mov %rbp,%rsp   48 89 EC
+  //pop %rbo   5D
+  //retq  C3
+  block->code[block->nextFree] = 0x48;
+  block->nextFree ++;
+  block->code[block->nextFree] = 0x89;
+  block->nextFree ++;
+  block->code[block->nextFree] = 0xEC;
+  block->nextFree ++;
+  block->code[block->nextFree] = 0x5D;
+  block->nextFree ++;
+  block->code[block->nextFree] = 0xC3;
+  block->nextFree ++;
+
+}
 void retorno(FILE *myfp, int line, int c, Memory *block, int *code_line){
   char c0;
   if (fscanf(myfp, "et%c", &c0) != 1){
@@ -25,18 +42,20 @@ void retorno(FILE *myfp, int line, int c, Memory *block, int *code_line){
     code_line[line]=block->nextFree;
     printf("ret\n");
     // mov -X(%ebp),%eax ou x(%ebp)
-    unsigned char local_pilha = 0xFC - 4;
+    //Sempre tem que retornar o que está em v1
+    unsigned char local_pilha = 0xFC;
     block->code[block->nextFree] = 0x8B;
     block->nextFree ++;
     block->code[block->nextFree] = 0x45;
     block->nextFree ++;
-    block->code[block->nextFree] = local_pilha
+    block->code[block->nextFree] = local_pilha;
     block->nextFree ++;
-    // leave ret
-    block->code[block->nextFree] = 0xC9;
-    block->nextFree ++;
-    block->code[block->nextFree] = 0xC3;
-    block->nextFree ++;
+    // // leave ret
+    // block->code[block->nextFree] = 0xC9;
+    // block->nextFree ++;
+    // block->code[block->nextFree] = 0xC3;
+    // block->nextFree ++;
+    end_code(block);
   }
 }
 
@@ -62,6 +81,7 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
       block->code[block->nextFree] = 0xF4;
 
       block->nextFree ++;
+      break;
       case 'v':
       //No caso de uma variável local,ela tem que estar na pilha.Só tem que descobrir em que posição.
       //Os três primeiros códigos são iguais.
@@ -74,9 +94,11 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
       block->nextFree ++;
 
       //O quarto muda de acordo com o número da variável,que indica onde ela está na pilha.
-      unsigned char local_pilha = 0xFC - (var1 * 4);
+      unsigned char local_pilha = 0xFC - ((idx1 - 1) * 4);
       block->code[block->nextFree] = local_pilha;
       block->nextFree ++;
+
+      break;
 
 
       case '$':
@@ -94,6 +116,7 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
       block->nextFree ++;
       block->code[block->nextFree] = (char) idx1 >> 24;
       block->nextFree ++;
+      break;
 
     }
 
@@ -103,14 +126,16 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
       block->nextFree ++;
       block->code[block->nextFree] = 0x89;
       block->nextFree ++;
-      if (idx1 == 1)  //Parâmetro está no %edi
+      if (idx2 == 1)  //Parâmetro está no %edi
       //movl %edi,%r13d
       block->code[block->nextFree] = 0xFD;
       else  //Parâmetro está no %esi
       //movl %esi,%r13d
       block->code[block->nextFree] = 0xF5;
 
+
       block->nextFree ++;
+      break;
       case 'v':
       //Mesmo caso do primeiro switch.Só muda aqui é que está movendo para %r13d.
       block->code[block->nextFree] = 0x44;
@@ -121,9 +146,10 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
       block->nextFree ++;
 
       //O quarto muda de acordo com o número da variável,que indica onde ela está na pilha.
-      unsigned char local_pilha = 0xFC - (var2 * 4);
+      unsigned char local_pilha = 0xFC - ((idx2 - 1) * 4);
       block->code[block->nextFree] = local_pilha;
       block->nextFree ++;
+      break;
 
       case '$':
       //movl $const,%r13d
@@ -140,6 +166,7 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
       block->nextFree ++;
       block->code[block->nextFree] = (char) idx1 >> 24;
       block->nextFree ++;
+      break;
     }
 
     switch (op) {
@@ -152,6 +179,7 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
       block->nextFree ++;
       block->code[block->nextFree] = 0xEC;
       block->nextFree ++;
+      break;
 
       case '-':
       //45 29 EC   sub %r13d,%r12d
@@ -161,6 +189,7 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
       block->nextFree ++;
       block->code[block->nextFree] = 0xEC;
       block->nextFree ++;
+      break;
 
       case '*':
       //45 of af e5 imul %r13d,%r12d
@@ -172,6 +201,7 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
       block->nextFree ++;
       block->code[block->nextFree] = 0xE5;
       block->nextFree ++;
+      break;
     }
   }
 
@@ -188,9 +218,10 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
     block->nextFree ++;
 
     //O maior código de máquina é o da primeira posição.(0xFC).Ele diminui de 4 a cada próxima posição.
-    unsigned char local_pilha = 0xFC - (var0 * 4);
+    unsigned char local_pilha = 0xFC - ((idx0 - 1) * 4);
     block->code[block->nextFree] = local_pilha;
     block->nextFree ++;
+    break;
 
     case 'p':
     block->code[block->nextFree] = 0x44;
@@ -203,6 +234,7 @@ void atribuicao(FILE *myfp, int line, int c,Memory *block, int *code_line){
     block->code[block->nextFree] = 0xE6;
 
     block->nextFree ++;
+    break;
   }
 }
 
@@ -332,23 +364,7 @@ void init_func (Memory *block) {
   }
 }
 
-void end_code (Memory *block) {
-  //Instruções para finalizar o programa
-  //mov %rbp,%rsp   48 89 EC
-  //pop %rbo   5D
-  //retq  C3
-  block->code[block->nextFree] = 0x48;
-  block->nextFree ++;
-  block->code[block->nextFree] = 0x89;
-  block->nextFree ++;
-  block->code[block->nextFree] = 0xEC;
-  block->nextFree ++;
-  block->code[block->nextFree] = 0x5D;
-  block->nextFree ++;
-  block->code[block->nextFree] = 0xC3;
-  block->nextFree ++;
 
-}
 Memory *init_memory() {
   Memory *init;
   init = (Memory*)malloc (sizeof(Memory));
@@ -387,6 +403,9 @@ funcp compila (FILE *myfp){
     fscanf(myfp, " ");
   }
   printf("\nChegou fim\n");
+  int i;
+  for(i=0;i<block->nextFree;i++)
+  printf("Char:%x\n",block->code[i]);
 
   return (funcp)block->code;
 }

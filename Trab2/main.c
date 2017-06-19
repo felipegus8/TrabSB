@@ -7,13 +7,13 @@ int main(void){
   funcp f;
   FILE *myfp;
   funcp retorno;
+  int i;
 
   if ((myfp = fopen ("programa.txt", "r")) == NULL) {
     perror ("nao conseguiu abrir arquivo!");
     exit(1);
   }
   retorno = compila(myfp);
-  
 
   return 0;
 }
