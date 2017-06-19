@@ -213,9 +213,6 @@ void desvia(FILE *myfp, int line, int c, Memory *block,int *code_line){
     error("comando invalido", line);
   }else{
     code_line[line]=block->nextFree;
-    if(line < num){
-      error("Numero de linha para JUMP inexistente",line);
-    }else{
       unsigned char local_pilha;
       switch (var0) {
         case 'p':
@@ -242,6 +239,55 @@ void desvia(FILE *myfp, int line, int c, Memory *block,int *code_line){
       block->nextFree ++;
       block->code[block->nextFree] = 0x00;
       block->nextFree ++;
+
+      if(line < num){
+
+        int nxtfree = block->nextFree;
+        block->nextFree ++;
+        while (line < num) {
+          if((c = fgetc(myfp)) != EOF){
+            switch (c) {
+              case 'r': { /* retorno */
+                retorno(myfp,line,c,block,code_line);
+                break;
+              }
+              case 'v':
+              case 'p': {  /* atribuicao */
+                atribuicao(myfp,line,c,block,code_line);
+                break;
+              }
+              case 'i': { /* desvio */
+                desvia(myfp,line,c,block,code_line);
+                break;
+              }
+              default: error("comando desconhecido", line);
+            }
+            line ++;
+            fscanf(myfp, " ");
+          }else{
+            error("Numero de linha para JUMP inexistente", line);
+            exit (1);
+          }
+        }
+
+        // jl linhaX
+        block->code[nxtfree] = 0x7C;
+        block->nextFree ++;
+        block->code[block->nextFree] = block->code[code_line[num-1]];
+        block->nextFree ++;
+        // je linhaX
+        block->code[nxtfree] = 0x74;
+        block->nextFree ++;
+        block->code[block->nextFree] = block->code[block->nextFree];
+        block->nextFree ++;
+        // jg linhaX
+        block->code[nxtfree] = 0x7F;
+        block->nextFree ++;
+        block->code[block->nextFree] = block->code[code_line[num-1]];
+        block->nextFree ++;
+
+      }
+
       // jl linhaX
       block->code[block->nextFree] = 0x7C;
       block->nextFree ++;
@@ -257,7 +303,6 @@ void desvia(FILE *myfp, int line, int c, Memory *block,int *code_line){
       block->nextFree ++;
       block->code[block->nextFree] = block->code[code_line[num-1]];
       block->nextFree ++;
-    }
   }
 }
 typedef int (*funcp) ();
