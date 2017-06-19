@@ -1,0 +1,19 @@
+Felipe Gustavo Pereira Viberti 1510384 Turma 3 WB
+Matheus Rodrigues de Oliveira Leal 1511316 Turma 3 WB
+
+O programa foi testado olhando a resposta esperada em um comando em assembly que representava
+o mesmo que o da linguagem bem simples, e também usando o objdump para analisar esse assembly
+de uma maneira mais aprofundada.Não foram encontrados erros que possam prejudicar o funcionamento
+do programa. Usamos editores de texto para escrever o código e testamos eles por meio do terminal
+usando o gcc. Separamos a conversão para a linguagem de máquina em algumas funções.
+
+Não tivemos dificuldade para fazer a função retorno. Depois de analisar uma função em assembly bem
+simples conseguimos entender como ela funciona e quais seriam os seus comandos. Depois começamos a
+analisar como seriam as variações desse comando dependendo do caso, conseguimos uma maneira geral
+de fazer os casos de retorno. Na função que analisa os casos de desvio tivemos algumas dificuldades
+iniciais. Realizamos testes e obtivemos a conversão correta após algumas tentativas. Tivemos algumas
+irregulariedades durante o processo de teste. Após usar o objdump conseguimos entender como indicar a
+linha que seria desviada para ser usada. Começamos então a pensar como seria feito para saber o primeiro
+comando de cada linha para assim fazer a conta necessária para o desvio. Usamos um vetor para guardar a
+posição desse primeiro comando. Esse vetor estava sendo usado de maneira errada. Após analisar posição
+por posição que era guardada no vetor conseguimos encontrar o erro e assim consertar a função desvia.
