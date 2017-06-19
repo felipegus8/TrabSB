@@ -275,14 +275,6 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
         break;
       }
       printf("if %c%d %d\n", var0, idx0, num);
-      // // mov -X(%ebp),%edx ou x(%ebp)
-      // block->code[block->nextFree] = 0x8B;
-      // block->nextFree ++;
-      // block->code[block->nextFree] = 0x55;
-      // block->nextFree ++;
-      // block->code[block->nextFree] = local_pilha;
-      // block->nextFree ++;
-      // cmp $0,%edx
 
       if(temp < num){
         int nxtfree = block->nextFree;
@@ -313,40 +305,43 @@ void desvia(FILE *myfp, int *line, int c, Memory *block,int *code_line){
             exit (1);
           }
         }
-        // jl linhaX
-        block->code[nxtfree] = 0x7C;
-        block->nextFree ++;
-        block->code[block->nextFree] = (char)(code_line[num-1] - (block->nextFree+1));
-        block->nextFree ++;
-        // je linhaX
-        block->code[nxtfree] = 0x74;
-        block->nextFree ++;
-        block->code[block->nextFree] = (char)((block->nextFree+1));
-        block->nextFree ++;
-        // jg linhaX
-        block->code[nxtfree] = 0x7F;
-        block->nextFree ++;
-        block->code[block->nextFree] = (char)(code_line[num-1] -(block->nextFree+1));
-        block->nextFree ++;
+        // jne linhaX
+        block->code[nxtfree] = 0x75;
+        block->code[nxtfree + 1] = &block->code[code_line[num - 1]] - &block->code[nxtfree + 2];
+        printf("Code-Line::::::::::\n%x\n",&block->code[code_line[1]]);
+        printf("Code-Line::::::::::\n%x\n",&block->code[27]);
+
+        printf("nextFree::::::::::\n%c\n",&block->code[nxtfree + 2]);
+        // // je linhaX
+        // block->code[nxtfree] = 0x74;
+        // block->nextFree ++;
+        // block->code[block->nextFree] = (char)((block->nextFree+1));
+        // block->nextFree ++;
+        // // jg linhaX
+        // block->code[nxtfree] = 0x7F;
+        // block->nextFree ++;
+        // block->code[block->nextFree] = (char)(code_line[num-1] -(block->nextFree+1));
+        // block->nextFree ++;
 
       }
-
+      else {
       // jl linhaX
-      block->code[block->nextFree] = 0x7C;
+      block->code[block->nextFree] = 0x75;
       block->nextFree ++;
-      block->code[block->nextFree] = (char)(code_line[num-1] - (block->nextFree+1));
-      block->nextFree ++;
-      // je linhaX
-      block->code[block->nextFree] = 0x74;
-      block->nextFree ++;
-      block->code[block->nextFree] = (char)(block->nextFree +1);
-      block->nextFree ++;
-      // jg linhaX
-      block->code[block->nextFree] = 0x7F;
-      block->nextFree ++;
-      block->code[block->nextFree] = (char)(code_line[num-1] - (block->nextFree+1));
+      block->code[block->nextFree] = &block->code[code_line[num - 1]] - &block->code[block->nextFree + 1];
       block->nextFree ++;
 
+      // // je linhaX
+      // block->code[block->nextFree] = 0x74;
+      // block->nextFree ++;
+      // block->code[block->nextFree] = (char)(block->nextFree +1);
+      // block->nextFree ++;
+      // // jg linhaX
+      // block->code[block->nextFree] = 0x7F;
+      // block->nextFree ++;
+      // block->code[block->nextFree] = (char)(code_line[num-1] - (block->nextFree+1));
+      // block->nextFree ++;
+    }
       *line = temp;
   }
 }
